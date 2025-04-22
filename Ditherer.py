@@ -2,18 +2,6 @@ from PIL import Image
 import os
 import numpy
 
-# Grab directory of script
-#script_dir = os.path.dirname(os.path.abspath(__file__))
-
-# Make directory of image
-#image_path = os.path.join(script_dir, "Illustration2.png")
-
-# Make directory for saving
-#save_path = os.path.join(script_dir, "Fucking_Idiot.png")
-
-# Create image from import
-#image = Image.open(image_path)
-
 def apply_bayer_dithering(image: Image.Image, scale_factor: int=2) -> Image.Image:
 
     # grayscale convert
@@ -46,17 +34,5 @@ def apply_bayer_dithering(image: Image.Image, scale_factor: int=2) -> Image.Imag
 
     # Upscale to original size
     image_upscaled = image_dithered.resize((width, height), resample=Image.NEAREST)
-    
+
     return image_upscaled
-
-# Round data to nearest digit
-#data_rounded = numpy.round(data)
-
-# Convert back to 0-255 range
-#data_255 = (data_rounded * 255).astype(numpy.uint8)
-
-# Show the image
-#image_upscaled.show()
-
-# Save the image
-#image.save(save_path)
