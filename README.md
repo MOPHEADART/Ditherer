@@ -1,1 +1,1 @@
-This is a program I wrote that takes an image and applies a Bayer 2x2 matrix to dither the image. It accepts .png and .jpg as well as exports in both.
+This is a program I wrote that takes an image and applies a Bayer matrices to dither an image. It accepts .png and .jpg as well as exports in both.
