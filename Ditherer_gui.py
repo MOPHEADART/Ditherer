@@ -24,20 +24,30 @@ image_frame = tk.Frame(window)
 image_frame.place(relx=0.5, rely=0.35, relwidth=0.8, relheight=0.4, anchor="center")
 image_frame.pack_propagate(False)
 
+# Dither selection dropdown
+matrix_size = tk.StringVar(value="Bayer 2x2")
+matrix_dropdown = ttk.Combobox(window, textvariable=matrix_size, state="readonly")
+matrix_dropdown['values'] = ("Bayer 2x2", "Bayer 4x4", "Bayer 8x8")
+matrix_dropdown.current(0)
+matrix_dropdown.place(relx=0.5, rely=0.65, relwidth=0.3, anchor="center")
+
 # Slider frame
 downscale_factor = tk.IntVar(value=2)
 slider_frame = tk.Frame(window)
-slider_frame.place(relx=0.5, rely=0.65, relwidth=0.7, relheight=0.1, anchor='center')
-
+slider_frame.place(relx=0.5, rely=0.75, relwidth=0.7, relheight=0.1, anchor='center')
 ###############
 
 # Label to display image
 image_label = tk.Label(image_frame, bg="gray")
 image_label.pack(fill=tk.BOTH, expand=True)
 
-# Label to display Slider
+# Label to slider
 slider_label = tk.Label(slider_frame, text= "Downscale Factor:", anchor="w", justify="left")
 slider_label.pack(anchor="w")
+
+#Label to dropdown
+matrix_dropdown_label = tk.Label(window, text="Dither type:")
+matrix_dropdown_label.place(relx=0.5, rely=0.60, anchor="center")
 
 # Store image to use globally
 loaded_image = None
@@ -133,7 +143,16 @@ def export_image(format):
     progress_var.set(10)
     
     downscale = downscale_factor.get()
-    dithered = apply_bayer_dithering(loaded_image, downscale)
+
+    selected_matrix = matrix_size.get()
+    if "Bayer 2x2" in selected_matrix:
+        matrix_value = 2
+    elif "Bayer 4x4" in selected_matrix:
+        matrix_value = 4
+    elif "Bayer 8x8" in selected_matrix:
+        matrix_value = 8
+
+    dithered = apply_bayer_dithering(loaded_image, downscale, matrix_value)
 
     progress_var.set(50)
 
