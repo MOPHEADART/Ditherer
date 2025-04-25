@@ -61,7 +61,4 @@ def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: 
     # Convert data back to image
     image_dithered = Image.fromarray(dithered, mode="L")
 
-    # Upscale to original size
-    image_upscaled = image_dithered.resize((width, height), resample=Image.NEAREST)
-
-    return image_upscaled
+    return image_dithered

@@ -17,7 +17,7 @@ load_button_frame.place(relx=0.5, rely=0.1, anchor="center")
 
 # Export buttons frame
 export_frame = tk.Frame(window)
-export_frame.place(relx=0.5, rely=0.85, relwidth=0.6, anchor="center")
+export_frame.place(relx=0.5, rely=0.89, relwidth=0.6, anchor="center")
 
 # Image frame
 image_frame = tk.Frame(window)
@@ -31,11 +31,20 @@ matrix_dropdown['values'] = ("Bayer 2x2", "Bayer 4x4", "Bayer 8x8")
 matrix_dropdown.current(0)
 matrix_dropdown.place(relx=0.5, rely=0.65, relwidth=0.3, anchor="center")
 
-# Slider frame
+# Downscale slider frame
 downscale_factor = tk.IntVar(value=2)
 slider_frame = tk.Frame(window)
-slider_frame.place(relx=0.5, rely=0.75, relwidth=0.7, relheight=0.1, anchor='center')
+slider_frame.place(relx=0.5, rely=0.73, relwidth=0.7, anchor='center')
+
+# Upscale checkbox
+upscale_checkbox_state = tk.IntVar()
+upscale_checkbox = tk.Checkbutton(window, text="Upscale on export?", variable=upscale_checkbox_state,
+                                  onvalue=1, offvalue=0)
+upscale_checkbox.place(relx=0.5, rely=0.83, anchor="center")
+
 ###############
+
+
 
 # Label to display image
 image_label = tk.Label(image_frame, bg="gray")
@@ -132,7 +141,7 @@ downscale_slider.pack (fill=tk.X, expand=True)
 # Progress bar
 progress_var = tk.DoubleVar()
 progress_bar = ttk.Progressbar(window, variable=progress_var, maximum=100)
-progress_bar.place(relx=0.5, rely=0.95, relwidth=0.9, anchor="center")
+progress_bar.place(relx=0.5, rely=0.95, relwidth=0.95, anchor="center")
 ###########
 
 # Exporter
@@ -153,6 +162,9 @@ def export_image(format):
         matrix_value = 8
 
     dithered = apply_bayer_dithering(loaded_image, downscale, matrix_value)
+
+    if upscale_checkbox_state.get() == 1:
+        dithered = dithered.resize(loaded_image.size, resample=Image.NEAREST)
 
     progress_var.set(50)
 
