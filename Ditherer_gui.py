@@ -40,7 +40,13 @@ slider_frame.place(relx=0.5, rely=0.73, relwidth=0.7, anchor='center')
 upscale_checkbox_state = tk.IntVar()
 upscale_checkbox = tk.Checkbutton(window, text="Upscale on export?", variable=upscale_checkbox_state,
                                   onvalue=1, offvalue=0)
-upscale_checkbox.place(relx=0.5, rely=0.83, anchor="center")
+upscale_checkbox.place(relx=0.25, rely=0.83, anchor="center")
+
+# Color checkbox
+color_checkbox_state = tk.IntVar()
+color_checkbox = tk.Checkbutton(window, text="Color image?", variable=color_checkbox_state,
+                                onvalue=1, offvalue=0)
+color_checkbox.place(relx=0.75, rely=0.83, anchor="center")
 
 ###############
 
@@ -161,7 +167,7 @@ def export_image(format):
     elif "Bayer 8x8" in selected_matrix:
         matrix_value = 8
 
-    dithered = apply_bayer_dithering(loaded_image, downscale, matrix_value)
+    dithered = apply_bayer_dithering(loaded_image, downscale, matrix_value, color=color_checkbox_state.get() == 1)
 
     if upscale_checkbox_state.get() == 1:
         dithered = dithered.resize(loaded_image.size, resample=Image.NEAREST)

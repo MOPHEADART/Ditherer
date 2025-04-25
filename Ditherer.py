@@ -2,18 +2,19 @@ from PIL import Image
 import os
 import numpy
 
-def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: int=2) -> Image.Image:
+def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: int=2, color: bool=False) -> Image.Image:
 
     # grayscale convert
-    image_grayscale = image.convert("L")
+    if not color:
+        image = image.convert("L")
 
     # downscale image
     width, height = image.size
-    image_downscaled = image_grayscale.resize((width // scale_factor, height // scale_factor), resample=Image.BILINEAR)
+    image = image.resize((width // scale_factor, height // scale_factor), resample=Image.BILINEAR)
 
     # Normalize values between 0-1
-    data = numpy.array(image_downscaled).astype(numpy.float32) / 255.
-    normalized_height, normalized_width = data.shape
+    data = numpy.array(image).astype(numpy.float32) / 255.
+    normalized_height, normalized_width = data.shape[:2]
 
     # Bayer 2x2 Matrix
     bayer_matrix_2x2 = numpy.array([[0.0, 0.5],
@@ -49,16 +50,27 @@ def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: 
         return
 
     # Array for dithering
-    dithered = numpy.zeros((normalized_height, normalized_width), dtype=numpy.uint8)
+    if color:
+        dithered = numpy.zeros((normalized_height, normalized_width, 3), dtype=numpy.uint8)
+    else:
+        dithered = numpy.zeros((normalized_height, normalized_width), dtype=numpy.uint8)
 
     # Apply Dithering
     for y in range(normalized_height):
         for x in range(normalized_width):
             threshold = bayer_matrix[y % matrix_size, x % matrix_size]
-            value = data[y, x]
-            dithered[y, x] = 255 if value >= threshold else 0
+            if color:
+                for c in range(3):
+                    value = data[y, x, c]
+                    dithered[y, x, c] = 255 if value>=threshold else 0
+            else:
+                value = data[y, x]
+                dithered[y, x] = 255 if value >= threshold else 0
 
     # Convert data back to image
-    image_dithered = Image.fromarray(dithered, mode="L")
+    if color:
+        image_dithered = Image.fromarray(dithered, mode="RGB")
+    else:
+        image_dithered = Image.fromarray(dithered, mode="L")
 
     return image_dithered
