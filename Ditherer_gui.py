@@ -24,30 +24,10 @@ image_frame = tk.Frame(window)
 image_frame.place(relx=0.5, rely=0.35, relwidth=0.8, relheight=0.4, anchor="center")
 image_frame.pack_propagate(False)
 
-# Dither selection dropdown
-matrix_size = tk.StringVar(value="Bayer 2x2")
-matrix_dropdown = ttk.Combobox(window, textvariable=matrix_size, state="readonly")
-matrix_dropdown['values'] = ("Bayer 2x2", "Bayer 4x4", "Bayer 8x8")
-matrix_dropdown.current(0)
-matrix_dropdown.place(relx=0.5, rely=0.65, relwidth=0.3, anchor="center")
-
 # Downscale slider frame
 downscale_factor = tk.IntVar(value=2)
 slider_frame = tk.Frame(window)
 slider_frame.place(relx=0.5, rely=0.73, relwidth=0.7, anchor='center')
-
-# Upscale checkbox
-upscale_checkbox_state = tk.IntVar()
-upscale_checkbox = tk.Checkbutton(window, text="Upscale on export?", variable=upscale_checkbox_state,
-                                  onvalue=1, offvalue=0)
-upscale_checkbox.place(relx=0.25, rely=0.83, anchor="center")
-
-# Color checkbox
-color_checkbox_state = tk.IntVar()
-color_checkbox = tk.Checkbutton(window, text="Color image?", variable=color_checkbox_state,
-                                onvalue=1, offvalue=0)
-color_checkbox.place(relx=0.75, rely=0.83, anchor="center")
-
 ###############
 
 
@@ -148,6 +128,25 @@ downscale_slider.pack (fill=tk.X, expand=True)
 progress_var = tk.DoubleVar()
 progress_bar = ttk.Progressbar(window, variable=progress_var, maximum=100)
 progress_bar.place(relx=0.5, rely=0.95, relwidth=0.95, anchor="center")
+
+# Dither selection dropdown
+matrix_size = tk.StringVar(value="Bayer 2x2")
+matrix_dropdown = ttk.Combobox(window, textvariable=matrix_size, state="readonly")
+matrix_dropdown['values'] = ("Bayer 2x2", "Bayer 4x4", "Bayer 8x8")
+matrix_dropdown.current(0)
+matrix_dropdown.place(relx=0.5, rely=0.65, relwidth=0.3, anchor="center")
+
+# Upscale checkbox
+upscale_checkbox_state = tk.IntVar()
+upscale_checkbox = tk.Checkbutton(window, text="Upscale on export?", variable=upscale_checkbox_state,
+                                  onvalue=1, offvalue=0)
+upscale_checkbox.place(relx=0.25, rely=0.83, anchor="center")
+
+# Color checkbox
+color_checkbox_state = tk.IntVar()
+color_checkbox = tk.Checkbutton(window, text="Color image?", variable=color_checkbox_state,
+                                onvalue=1, offvalue=0)
+color_checkbox.place(relx=0.75, rely=0.83, anchor="center")
 ###########
 
 # Exporter
