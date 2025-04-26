@@ -1,4 +1,5 @@
 #Ditherer
+---
 Ditherer is a python program that applies a dithering effect to images. It accepts *.png, *.jpg, and *.jpeg formatting.
 ---
 Current features of Ditherer:
