@@ -2,9 +2,10 @@ import tkinter as tk
 from tkinter import filedialog, ttk
 from PIL import Image, ImageTk
 from Ditherer import apply_bayer_dithering
+from tkinterdnd2 import DND_FILES, TkinterDnD
 
 # Create window
-window = tk.Tk()
+window = TkinterDnD.Tk()
 window.title("Ditherer")
 window.geometry("500x800")
 window.minsize(width=500, height=800)
@@ -45,7 +46,7 @@ preview_button_frame.place(relx=0.5, rely=0.77, anchor="center")
 ###############
 
 # Label to image frame
-image_label = tk.Label(image_frame, bg="gray")
+image_label = tk.Label(image_frame, text="Drag and drop images here", bg="gray")
 image_label.pack(fill=tk.BOTH, expand=True)
 
 # Label to slider
@@ -65,8 +66,8 @@ def load_image():
     if path:
         loaded_image = Image.open(path)
         loaded_image = loaded_image.convert("RGB")
-        update_image()
 
+        update_image()
         generate_dithered_image()
         update_preview()
 
@@ -184,6 +185,19 @@ def update_preview():
 
     preview_canvas.image = preview_tk
 
+# Dropping images
+def on_drop(event):
+    global loaded_image
+    path = event.data.strip('{}')
+
+    if path:
+        loaded_image = Image.open(path)
+        loaded_image = loaded_image.convert("RGB")
+
+        update_image()
+        generate_dithered_image()
+        update_preview()
+
 # Bind the resize of window to image update
 window.bind("<Configure>", on_resize)
 
@@ -233,7 +247,7 @@ color_checkbox = tk.Checkbutton(window, text="Color image?", variable=color_chec
 color_checkbox.place(relx=0.75, rely=0.85, anchor="center")
 
 # Preview button
-preview_button = tk.Button(preview_button_frame, text="Live Preview", width=20, height=3, font=5, command=open_preview)
+preview_button = tk.Button(preview_button_frame, text="Live Preview", width=20, height=3, font=3, command=open_preview)
 preview_button.pack()
 ###########
 
@@ -263,6 +277,9 @@ def export_image(format):
     progress_var.set(100)
     window.update_idletasks()
     window.after(500, lambda: progress_var.set(0))
+
+window.drop_target_register(DND_FILES)
+window.dnd_bind('<<Drop>>', on_drop)
 
 # Tinker Event loop
 window.mainloop()
