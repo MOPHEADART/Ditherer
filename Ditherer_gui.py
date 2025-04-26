@@ -14,9 +14,9 @@ loaded_image = None
 image_tk = None
 resize_after_id = None
 preview_window = None
-preview_label = None
-zoom_level = 1.0
-zoom_step = 0.1
+preview_canvas = None
+preview_canvas_image = None
+cached_dithered_image = None
 
 ###############
 #Layout Frames#
@@ -64,7 +64,10 @@ def load_image():
     # If image is selected
     if path:
         loaded_image = Image.open(path)
+        loaded_image = loaded_image.convert("RGB")
         update_image()
+
+        generate_dithered_image()
         update_preview()
 
 # Scale Image with window size
@@ -109,10 +112,12 @@ def on_resize(event):
 
 # Generate dithered image
 def generate_dithered_image():
-    global preview_label
+    global preview_label, cached_dithered_image
 
     if not loaded_image:
         return None
+    
+    cached_dithered_image = None
     
     downscale = downscale_factor.get()
 
@@ -131,57 +136,53 @@ def generate_dithered_image():
         color=color_checkbox_state.get() == 1
     )
 
+    cached_dithered_image = dithered_image
+
     return dithered_image
 
 # Open preview window
 def open_preview():
-    global preview_window, preview_label
+    global preview_window, preview_canvas, preview_canvas_image
     if preview_window is not None and tk.Toplevel.winfo_exists(preview_window):
         preview_window.lift()
         return
     
     preview_window = tk.Toplevel(window)
     preview_window.title("Preview Image")
-    preview_window.geometry("420x420")
 
-    preview_label = tk.Label(preview_window, bg="black")
-    preview_label.pack(fill=tk.BOTH, expand=True)
+    dithered_image = generate_dithered_image()
+    if dithered_image:
+        image_width, image_height = dithered_image.size
+        preview_window.geometry(f"{image_width}x{image_height}")
 
-    preview_window.bind("<MouseWheel>", on_mouse_wheel)
+    preview_canvas = tk.Canvas(preview_window, bg="gray")
+    preview_canvas.pack(fill="both", expand=True)
 
     update_preview()
 
 def on_settings_change(*args):
+    global cached_dithered_image
+    cached_dithered_image = generate_dithered_image()
     update_preview()
 
 # Update preview window
 def update_preview():
-    global preview_label
+    global preview_canvas, preview_canvas_image, cached_dithered_image
 
-    dithered_image = generate_dithered_image()
-    if dithered_image is None or preview_label is None:
+    if cached_dithered_image is None or preview_canvas is None:
         return
     
-    width, height = dithered_image.size
-    zoomed = dithered_image.resize(
-        (int(width * zoom_level), int(height * zoom_level)),
-        resample=Image.NEAREST
-    )
-    
-    preview_tk = ImageTk.PhotoImage(zoomed)
-    preview_label.config(image=preview_tk)
-    preview_label.image = preview_tk
+    width, height = cached_dithered_image.size
+    preview_window.geometry(f"{width}x{height}")
 
-# Zoom function
-def on_mouse_wheel(event):
-    global zoom_level
+    preview_tk = ImageTk.PhotoImage(cached_dithered_image)
 
-    if event.delta > 0:
-        zoom_level += zoom_step
+    if preview_canvas_image:
+        preview_canvas.itemconfig(preview_canvas_image, image=preview_tk)
     else:
-        zoom_level = max(zoom_step, zoom_level - zoom_step)
-    
-    update_preview()
+        preview_canvas_image = preview_canvas.create_image(0,0, anchor="nw", image=preview_tk)
+
+    preview_canvas.image = preview_tk
 
 # Bind the resize of window to image update
 window.bind("<Configure>", on_resize)
@@ -220,7 +221,7 @@ matrix_dropdown.current(0)
 matrix_dropdown.place(relx=0.5, rely=0.6, relwidth=0.3, anchor="center")
 
 # Upscale checkbox
-upscale_checkbox_state = tk.IntVar()
+upscale_checkbox_state = tk.IntVar(value=1)
 upscale_checkbox = tk.Checkbutton(window, text="Upscale on export?", variable=upscale_checkbox_state,
                                   onvalue=1, offvalue=0)
 upscale_checkbox.place(relx=0.25, rely=0.85, anchor="center")
@@ -232,7 +233,7 @@ color_checkbox = tk.Checkbutton(window, text="Color image?", variable=color_chec
 color_checkbox.place(relx=0.75, rely=0.85, anchor="center")
 
 # Preview button
-preview_button = tk.Button(preview_button_frame, text="Live Preview", command=open_preview)
+preview_button = tk.Button(preview_button_frame, text="Live Preview", width=20, height=3, font=5, command=open_preview)
 preview_button.pack()
 ###########
 

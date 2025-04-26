@@ -38,6 +38,9 @@ def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: 
     bayer_matrix = bayer_matrices.get(matrix_size, bayer_matrices[2])
     matrix_height, matrix_width = bayer_matrix.shape
 
+    if color:
+        bayer_matrix = np.stack([bayer_matrix] * 3, axis=-1)
+
     # Array for dithering
     if color:
         if len(data.shape) == 2:
