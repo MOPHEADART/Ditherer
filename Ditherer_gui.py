@@ -124,7 +124,14 @@ def generate_dithered_image():
     elif "Bayer 8x8" in selected_matrix:
         matrix_value = 8
 
-    return apply_bayer_dithering(loaded_image, downscale, matrix_value, color=color_checkbox_state.get() == 1)
+    dithered_image = apply_bayer_dithering(
+        loaded_image,
+        downscale,
+        matrix_value,
+        color=color_checkbox_state.get() == 1
+    )
+
+    return dithered_image
 
 # Open preview window
 def open_preview():
@@ -151,12 +158,12 @@ def on_settings_change(*args):
 def update_preview():
     global preview_label
 
-    dithered = generate_dithered_image()
-    if dithered is None or preview_label is None:
+    dithered_image = generate_dithered_image()
+    if dithered_image is None or preview_label is None:
         return
     
-    width, height = dithered.size
-    zoomed = dithered.resize(
+    width, height = dithered_image.size
+    zoomed = dithered_image.resize(
         (int(width * zoom_level), int(height * zoom_level)),
         resample=Image.NEAREST
     )
@@ -240,20 +247,20 @@ def export_image(format):
     
     progress_var.set(10)
 
-    dithered = generate_dithered_image()
+    dithered_image = generate_dithered_image()
 
     if upscale_checkbox_state.get() == 1:
-        dithered = dithered.resize(loaded_image.size, resample=Image.NEAREST)
+        dithered_image = dithered_image.resize(loaded_image.size, resample=Image.NEAREST)
 
     progress_var.set(50)
 
     ext = format.lower()
     file_path = filedialog.asksaveasfilename(defaultextension=f".{ext}", filetypes=[(f"{format} files", f"*.{ext}")])
     if file_path:
-        dithered.save(file_path, format=format)
+        dithered_image.save(file_path, format=format)
 
     progress_var.set(100)
-    window.update_idletasks
+    window.update_idletasks()
     window.after(500, lambda: progress_var.set(0))
 
 # Tinker Event loop

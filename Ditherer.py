@@ -1,8 +1,7 @@
 from PIL import Image
-import os
-import numpy
+import numpy as np
 
-def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: int=2, color: bool=False) -> Image.Image:
+def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: int=2, color: bool = False) -> Image.Image:
 
     # grayscale convert
     if not color:
@@ -10,67 +9,57 @@ def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: 
 
     # downscale image
     width, height = image.size
-    image = image.resize((width // scale_factor, height // scale_factor), resample=Image.BILINEAR)
+    new_width = width // scale_factor
+    new_height = height // scale_factor
+    image = image.resize((new_width, new_height), resample=Image.BILINEAR)
 
     # Normalize values between 0-1
-    data = numpy.array(image).astype(numpy.float32) / 255.
-    normalized_height, normalized_width = data.shape[:2]
+    data = np.array(image, dtype=np.float32) / 255.0
 
-    # Bayer 2x2 Matrix
-    bayer_matrix_2x2 = numpy.array([[0.0, 0.5],
-                                    [0.75, 0.25]])
-    
-    # Bayer 4x4 Matrix
-    bayer_matrix_4x4 = numpy.array([[0.0, 0.53125, 0.15625, 0.65625],
-                                    [0.78125, 0.28125, 0.90625, 0.40625],
-                                    [0.21875, 0.71875, 0.09375, 0.59375],
-                                    [0.96875, 0.46875, 0.84375, 0.34375]])
-    
-    # Bayer 8x8 Matrix
-    bayer_matrix_8x8 = numpy.array([[0.00000, 0.75000, 0.18750, 0.93750, 0.04688, 0.79688, 0.23438, 0.98438],
-                                    [0.50000, 0.25000, 0.68750, 0.43750, 0.54688, 0.29688, 0.73438, 0.48438],
-                                    [0.12500, 0.87500, 0.06250, 0.81250, 0.17188, 0.92188, 0.10938, 0.85938],
-                                    [0.62500, 0.37500, 0.56250, 0.31250, 0.67188, 0.42188, 0.60938, 0.35938],
-                                    [0.03125, 0.78125, 0.21875, 0.96875, 0.01562, 0.76562, 0.20312, 0.95312],
-                                    [0.53125, 0.28125, 0.71875, 0.46875, 0.51562, 0.26562, 0.70312, 0.45312],
-                                    [0.15625, 0.90625, 0.09375, 0.84375, 0.14062, 0.89062, 0.07812, 0.82812],
-                                    [0.65625, 0.40625, 0.59375, 0.34375, 0.64062, 0.39062, 0.57812, 0.32812]])
-    
-    # Selection of Matrix size
-    if matrix_size == 2:
-        bayer_matrix = bayer_matrix_2x2
+    # Bayer matrices normalized
+    bayer_matrices = {
+        2: np.array([[0, 2],
+                    [3, 1]]) / 4,
+        4: np.array([[0, 8, 2, 10],
+                    [12, 4, 14, 6],
+                    [3, 11, 1, 9],
+                    [15, 7, 13, 5]]) / 16,
+        8: np.array([[0, 48, 12, 60, 3, 51, 15, 63],
+                    [32, 16, 44, 28, 35, 19, 47, 31],
+                    [8, 56, 4, 52, 11, 59, 7, 55],
+                    [40, 24, 36, 20, 43, 27, 39, 23],
+                    [2, 50, 14, 62, 1, 49, 13, 61],
+                    [34, 18, 46, 30, 33, 17, 45, 29],
+                    [10, 58, 6, 54, 9, 57, 5, 53],
+                    [42, 26, 38, 22, 41, 25, 37, 21]]) / 64
+    }
 
-    elif matrix_size == 4:
-        bayer_matrix = bayer_matrix_4x4
-
-    elif matrix_size == 8:
-        bayer_matrix = bayer_matrix_8x8
-    
-    else:
-        return
+    # selected Bayer matrix
+    bayer_matrix = bayer_matrices.get(matrix_size, bayer_matrices[2])
+    matrix_height, matrix_width = bayer_matrix.shape
 
     # Array for dithering
     if color:
-        dithered = numpy.zeros((normalized_height, normalized_width, 3), dtype=numpy.uint8)
+        if len(data.shape) == 2:
+            data = np.stack([data]*3, axis=-1)
+
+        threshold = np.tile(bayer_matrix,
+                                (new_height // matrix_height + 1,
+                                 new_width // matrix_width + 1, 1))
+        threshold = threshold[:new_height, :new_width, :]
     else:
-        dithered = numpy.zeros((normalized_height, normalized_width), dtype=numpy.uint8)
+        if len(data.shape) == 3:
+            data = np.mean(data, axis=-1)
+
+        threshold = np.tile(bayer_matrix,
+                                (new_height // matrix_height + 1,
+                                 new_width // matrix_width + 1))
+            
+        threshold = threshold[ :new_height, :new_width]
 
     # Apply Dithering
-    for y in range(normalized_height):
-        for x in range(normalized_width):
-            threshold = bayer_matrix[y % matrix_size, x % matrix_size]
-            if color:
-                for c in range(3):
-                    value = data[y, x, c]
-                    dithered[y, x, c] = 255 if value>=threshold else 0
-            else:
-                value = data[y, x]
-                dithered[y, x] = 255 if value >= threshold else 0
+    dithered = (data >= threshold).astype(np.uint8) * 255
 
-    # Convert data back to image
-    if color:
-        image_dithered = Image.fromarray(dithered, mode="RGB")
-    else:
-        image_dithered = Image.fromarray(dithered, mode="L")
-
-    return image_dithered
+    # Convert data back to PIL image
+    mode = "RGB" if color else "L"
+    return Image.fromarray(dithered, mode=mode)
