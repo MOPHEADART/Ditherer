@@ -122,14 +122,13 @@ def on_resize(event):
 
 # Generate dithered image
 def generate_dithered_image():
-    global preview_label, cached_dithered_image
+    global cached_dithered_image
 
     if not loaded_image:
         return None
     
-    cached_dithered_image = None
-    
     downscale = downscale_factor.get()
+    steps = steps_slider.get()
 
     selected_matrix = matrix_size.get()
     if "Bayer 2x2" in selected_matrix:
@@ -144,7 +143,7 @@ def generate_dithered_image():
         downscale,
         matrix_value,
         color=color_checkbox_state.get() == 1,
-        steps=steps_slider.get()
+        steps=steps
     )
 
     cached_dithered_image = dithered_image
@@ -154,22 +153,29 @@ def generate_dithered_image():
 # Open preview window
 def open_preview():
     global preview_window, preview_canvas, preview_canvas_image
+    
+    # If preview window exists and is visible, just bring it to front
     if preview_window is not None and tk.Toplevel.winfo_exists(preview_window):
         preview_window.lift()
         return
     
+    # Create new preview window
     preview_window = tk.Toplevel(window)
     preview_window.title("Preview Image")
-
-    dithered_image = generate_dithered_image()
-    if dithered_image:
-        image_width, image_height = dithered_image.size
-        preview_window.geometry(f"{image_width}x{image_height}")
-
+    preview_window.protocol("WM_DELETE_WINDOW", on_preview_close)
+    
     preview_canvas = tk.Canvas(preview_window, bg="gray")
     preview_canvas.pack(fill="both", expand=True)
-
+    
     update_preview()
+
+def on_preview_close():
+    global preview_window, preview_canvas, preview_canvas_image
+    if preview_window:
+        preview_window.destroy()
+    preview_window = None
+    preview_canvas = None
+    preview_canvas_image = None
 
 def on_settings_change(*args):
     global cached_dithered_image
@@ -180,7 +186,11 @@ def on_settings_change(*args):
 def update_preview():
     global preview_canvas, preview_canvas_image, cached_dithered_image
 
-    if cached_dithered_image is None or preview_canvas is None:
+    if cached_dithered_image is None:
+        return
+    
+    # If preview window doesn't exist, don't try to update it
+    if preview_window is None or not tk.Toplevel.winfo_exists(preview_window):
         return
     
     width, height = cached_dithered_image.size
@@ -191,7 +201,7 @@ def update_preview():
     if preview_canvas_image:
         preview_canvas.itemconfig(preview_canvas_image, image=preview_tk)
     else:
-        preview_canvas_image = preview_canvas.create_image(0,0, anchor="nw", image=preview_tk)
+        preview_canvas_image = preview_canvas.create_image(0, 0, anchor="nw", image=preview_tk)
 
     preview_canvas.image = preview_tk
 
@@ -247,7 +257,7 @@ matrix_dropdown.place(relx=0.5, rely=0.55, relwidth=0.3, anchor="center")
 # Steps slider
 steps_slider = tk.Scale(
     steps_slider_frame, from_=2, to=16, orient=tk.HORIZONTAL,
-    #variable=steps
+    variable=steps_factor, command=lambda e: on_settings_change()
 )
 steps_slider.pack (fill=tk.X, expand=True)
 
@@ -260,7 +270,7 @@ upscale_checkbox.place(relx=0.25, rely=0.87, anchor="center")
 # Color checkbox
 color_checkbox_state = tk.IntVar()
 color_checkbox = tk.Checkbutton(window, text="Color image?", variable=color_checkbox_state,
-                                onvalue=1, offvalue=0)
+                                onvalue=1, offvalue=0, command=on_settings_change)
 color_checkbox.place(relx=0.75, rely=0.87, anchor="center")
 
 # Preview button
@@ -269,7 +279,6 @@ preview_button.pack()
 ###########
 
 downscale_factor.trace_add("write", on_settings_change)
-color_checkbox_state.trace_add("write", on_settings_change)
 matrix_size.trace_add("write", on_settings_change)
 
 # Exporter
