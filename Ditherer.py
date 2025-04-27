@@ -57,11 +57,7 @@ def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: 
         threshold = threshold[ :new_height, :new_width]
 
     # Apply bayer threshold
-    data = data * (steps - 1)
-    data = data + threshold
-    data = np.floor(data)
-    data = data / (steps - 1)
-    data = np.clip(data, 0.0, 1.0)
+    data = np.floor(data *(steps - 1) + threshold) / (steps - 1)
 
     # Scale normalized values back to 0-255
     dithered = (data * 255).astype(np.uint8)
