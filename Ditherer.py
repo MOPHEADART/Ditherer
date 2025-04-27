@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 
-def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: int=2, color: bool = False, steps: int = None) -> Image.Image:
+def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: int=2, color: bool = False, steps: int = None, quantize: bool = True) -> Image.Image:
 
     # downscale image
     width, height = image.size
@@ -57,7 +57,10 @@ def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: 
         threshold = threshold[ :new_height, :new_width]
 
     # Apply bayer threshold
-    data = np.floor(data *(steps - 1) + threshold) / (steps - 1)
+    if quantize is True:
+        data = np.floor(data *(steps - 1) + threshold) / (steps - 1)
+    else:   
+        data = (data >= threshold).astype(np.float32)
 
     # Scale normalized values back to 0-255
     dithered = (data * 255).astype(np.uint8)

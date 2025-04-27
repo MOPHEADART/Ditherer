@@ -51,7 +51,7 @@ preview_button_frame.place(relx=0.5, rely=0.72, anchor="center")
 ###############
 
 # Label to image frame
-image_label = tk.Label(image_frame, text="Drag and drop images here", bg="gray")
+image_label = tk.Label(image_frame, text="Drag and Drop Images Here", font=4, bg="gray")
 image_label.pack(fill=tk.BOTH, expand=True)
 
 # Label to downscale slider
@@ -143,7 +143,8 @@ def generate_dithered_image():
         downscale,
         matrix_value,
         color=color_checkbox_state.get() == 1,
-        steps=steps
+        steps=steps,
+        quantize=quantize_checkbox_state.get() == 1
     )
 
     cached_dithered_image = dithered_image
@@ -260,6 +261,12 @@ steps_slider = tk.Scale(
     variable=steps_factor, command=lambda e: on_settings_change()
 )
 steps_slider.pack (fill=tk.X, expand=True)
+
+# Quantize checkbox
+quantize_checkbox_state = tk.IntVar(value=1)
+quantize_checkbox = tk.Checkbutton(window, text="Quantize?", variable=quantize_checkbox_state,
+                                   onvalue=1, offvalue=0, command=on_settings_change)
+quantize_checkbox.place(relx=0.5, rely=0.79, anchor="center")
 
 # Upscale checkbox
 upscale_checkbox_state = tk.IntVar(value=1)
