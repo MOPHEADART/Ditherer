@@ -24,7 +24,7 @@ cached_dithered_image = None
 ###############
 # Load image button frame
 load_button_frame = tk.Frame(window)
-load_button_frame.place(relx=0.5, rely=0.1, anchor="center")
+load_button_frame.place(relx=0.5, rely=0.05, anchor="center")
 
 # Export buttons frame
 export_frame = tk.Frame(window)
@@ -32,30 +32,39 @@ export_frame.place(relx=0.5, rely=0.92, relwidth=0.6, anchor="center")
 
 # Image frame
 image_frame = tk.Frame(window)
-image_frame.place(relx=0.5, rely=0.35, relwidth=0.8, relheight=0.4, anchor="center")
+image_frame.place(relx=0.5, rely=0.3, relwidth=0.8, relheight=0.4, anchor="center")
 image_frame.pack_propagate(False)
 
 # Downscale slider frame
 downscale_factor = tk.IntVar(value=2)
-slider_frame = tk.Frame(window)
-slider_frame.place(relx=0.5, rely=0.65, relwidth=0.7, anchor='center')
+downscale_slider_frame = tk.Frame(window)
+downscale_slider_frame.place(relx=0.5, rely=0.60, relwidth=0.5, anchor='center')
+
+# Steps slider frame
+steps_factor = tk.IntVar(value=2)
+steps_slider_frame = tk.Frame(window)
+steps_slider_frame.place(relx=0.5, rely=0.8, relwidth=0.7, anchor="center")
 
 # Preview image button frame
 preview_button_frame = tk.Frame(window)
-preview_button_frame.place(relx=0.5, rely=0.77, anchor="center")
+preview_button_frame.place(relx=0.5, rely=0.72, anchor="center")
 ###############
 
 # Label to image frame
 image_label = tk.Label(image_frame, text="Drag and drop images here", bg="gray")
 image_label.pack(fill=tk.BOTH, expand=True)
 
-# Label to slider
-slider_label = tk.Label(slider_frame, text= "Downscale Factor:", anchor="w", justify="left")
-slider_label.pack(anchor="w")
+# Label to downscale slider
+downscale_slider_label = tk.Label(downscale_slider_frame, text= "Downscale Factor:", anchor="w", justify="left")
+downscale_slider_label.pack(anchor="w")
+
+# Label to steps slider
+steps_slider_label = tk.Label(steps_slider_frame, text= "Steps", anchor="w", justify="left")
+steps_slider_label.pack(anchor="w")
 
 #Label to dropdown
 matrix_dropdown_label = tk.Label(window, text="Dither type:")
-matrix_dropdown_label.place(relx=0.5, rely=0.57, anchor="center")
+matrix_dropdown_label.place(relx=0.5, rely=0.52, anchor="center")
 
 # When 'Load Image' is clicked
 def load_image():
@@ -134,7 +143,8 @@ def generate_dithered_image():
         loaded_image,
         downscale,
         matrix_value,
-        color=color_checkbox_state.get() == 1
+        color=color_checkbox_state.get() == 1,
+        steps=steps_slider.get()
     )
 
     cached_dithered_image = dithered_image
@@ -217,7 +227,7 @@ export_jpg_button.pack(side=tk.LEFT, expand=True)
 
 # Downscale Slider
 downscale_slider = tk.Scale(
-    slider_frame, from_=1, to=12, orient=tk.HORIZONTAL,
+    downscale_slider_frame, from_=1, to=12, orient=tk.HORIZONTAL,
     variable=downscale_factor
 )
 downscale_slider.pack (fill=tk.X, expand=True)
@@ -228,23 +238,30 @@ progress_bar = ttk.Progressbar(window, variable=progress_var, maximum=100)
 progress_bar.place(relx=0.5, rely=0.97, relwidth=0.95, anchor="center")
 
 # Dither selection dropdown
-matrix_size = tk.StringVar(value="Bayer 2x2")
+matrix_size = tk.StringVar(value="Bayer 4x4")
 matrix_dropdown = ttk.Combobox(window, textvariable=matrix_size, state="readonly")
 matrix_dropdown['values'] = ("Bayer 2x2", "Bayer 4x4", "Bayer 8x8")
-matrix_dropdown.current(0)
-matrix_dropdown.place(relx=0.5, rely=0.6, relwidth=0.3, anchor="center")
+matrix_dropdown.current(1)
+matrix_dropdown.place(relx=0.5, rely=0.55, relwidth=0.3, anchor="center")
+
+# Steps slider
+steps_slider = tk.Scale(
+    steps_slider_frame, from_=2, to=16, orient=tk.HORIZONTAL,
+    #variable=steps
+)
+steps_slider.pack (fill=tk.X, expand=True)
 
 # Upscale checkbox
 upscale_checkbox_state = tk.IntVar(value=1)
 upscale_checkbox = tk.Checkbutton(window, text="Upscale on export?", variable=upscale_checkbox_state,
                                   onvalue=1, offvalue=0)
-upscale_checkbox.place(relx=0.25, rely=0.85, anchor="center")
+upscale_checkbox.place(relx=0.25, rely=0.87, anchor="center")
 
 # Color checkbox
 color_checkbox_state = tk.IntVar()
 color_checkbox = tk.Checkbutton(window, text="Color image?", variable=color_checkbox_state,
                                 onvalue=1, offvalue=0)
-color_checkbox.place(relx=0.75, rely=0.85, anchor="center")
+color_checkbox.place(relx=0.75, rely=0.87, anchor="center")
 
 # Preview button
 preview_button = tk.Button(preview_button_frame, text="Live Preview", width=20, height=3, font=3, command=open_preview)

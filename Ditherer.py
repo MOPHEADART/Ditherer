@@ -1,11 +1,7 @@
 from PIL import Image
 import numpy as np
 
-def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: int=2, color: bool = False) -> Image.Image:
-
-    # grayscale convert
-    if not color:
-        image = image.convert("L")
+def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: int=2, color: bool = False, steps: int = None) -> Image.Image:
 
     # downscale image
     width, height = image.size
@@ -60,8 +56,15 @@ def apply_bayer_dithering(image: Image.Image, scale_factor: int=2, matrix_size: 
             
         threshold = threshold[ :new_height, :new_width]
 
-    # Apply Dithering
-    dithered = (data >= threshold).astype(np.uint8) * 255
+    # Apply bayer threshold
+    data = data * (steps - 1)
+    data = data + threshold
+    data = np.floor(data)
+    data = data / (steps - 1)
+    data = np.clip(data, 0.0, 1.0)
+
+    # Scale normalized values back to 0-255
+    dithered = (data * 255).astype(np.uint8)
 
     # Convert data back to PIL image
     mode = "RGB" if color else "L"
