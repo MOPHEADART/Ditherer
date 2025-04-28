@@ -28,3 +28,4 @@ build/Ditherer v1.2.2/localpycs/pyimod02_importers.pyc
 build/Ditherer v1.2.2/localpycs/pyimod03_ctypes.pyc
 build/Ditherer v1.2.2/localpycs/pyimod04_pywin32.pyc
 build/Ditherer v1.2.2/localpycs/struct.pyc
+__pycache__
